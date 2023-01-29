@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .topnav {
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        .topnav a {
+            float: left;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+
+        .topnav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        .topnav a.active {
+            background-color: #04AA6D;
+            color: white;
+        }
+
+        .topnav a.inactive {
+            background-color: #aa0423;
+            color: white;
+        }
+
+        .test-btn {
+            float: right !important;
+            background: #353ea7;
+        }
+
+        #stop-app-btn {
+            display: none;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+        integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+
+    <script>
+        var appStatus = false;
+        const appport = 3000;
+        function runApp() {
+            $("#output").html("Loading please wait....");
+            $.ajax({
+                url: "http://127.00.1:3030/run-app", success: function (result) {
+                    if (result.status == "success") {
+                        $("#output").html("App is running..");
+                        checkAppStatus();
+                    }
+                }
+            });
+        }
+
+        function checkAppStatus() {
+            $.ajax({
+                url: "http://localhost:" + appport + "/health", success: (result) => {
+                    appStatus = false;
+                    if (result.status == "success") {
+                        appStatus = true;
+                    }
+                    updateAppStatusMessage();
+                },
+                error: () => {
+                    appStatus = false;
+                    updateAppStatusMessage();
+                }
+            });
+        }
+
+        function updateAppStatusMessage() {
+            let message = "Inactive";
+            if (appStatus) {
+                message = "Active";
+                $("#stop-app-btn").show();
+                $("#run-app-btn").hide();
+            }
+            else {
+                $("#stop-app-btn").hide();
+                $("#run-app-btn").show();
+            }
+            $("#appStatus").html(message);
+        }
+
+        function installPkg() {
+            $("#output").html("Loading please wait....");
+            $.ajax({
+                url: "http://127.00.1:3030/install-pkg", success: function (result) {
+                    if (result.status == "success") {
+                        $("#output").html(result.output);
+                    }
+                }
+            });
+        }
+
+        function stopApp() {
+            $("#output").html("Loading please wait....");
+            $.ajax({
+                url: "http://127.00.1:3030/stop-app", success: function (result) {
+                    if (result.status == "success") {
+                        $("#output").html("App is terminated.");
+                        checkAppStatus();
+                        appStatus = false;
+                        updateAppStatusMessage();
+                    }
+                }
+            });
+        }
+
+        function runTest() {
+            $("#output").html("Loading please wait....");
+            $.ajax({
+                url: "http://127.00.1:3030/run-test", success: function (result) {
+                    if (result.status == "success") {
+                        $("#output").html(result.output);
+                    }
+                }
+            });
+        }
+
+        checkAppStatus();
+        setInterval(() => {
+            checkAppStatus();
+        }, 5000);
+
+    </script>
+
+</head>
+
+<body>
+
+    <div class="topnav">
+        <a href="#" onclick="installPkg()">Install Dependencies</a>
+        <a class="active" href="#" onclick="runApp()" id="run-app-btn">Run App</a>
+        <a class="inactive" href="#" onclick="stopApp()" id="stop-app-btn">Stop App</a>
+        <a href="#" class="test-btn" onclick="runTest()">Run Test</a>
+    </div>
+
+    <div style="padding-left:16px">
+        <h2>App Status: <span id="appStatus"></span></h2>
+        <div>
+            <h3>Output:</h3>
+            <div id="output"></div>
+        </div>
+    </div>
+
+</body>
+
+</html>
